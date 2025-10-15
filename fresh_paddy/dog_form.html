@@ -1,0 +1,277 @@
+TYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Dog Profile</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+      background: #fdf6f0;
+    }
+    h1 {
+      color: #444;
+    }
+    form {
+      margin-bottom: 2rem;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.3rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .trait-selector label {
+      display: inline-block;
+      margin-right: 1rem;
+      margin-top: 0.5rem;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background-color: #ffb347;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .bio-card {
+      background: #fff8e1;
+      border: 1px solid #ffd54f;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      animation: wag 0.6s ease-in-out;
+    }
+    @keyframes wag {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .dog-avatar {
+      max-width: 200px;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+    #map {
+      height: 300px;
+      margin-top: 1rem;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐶 Create a Dog Profile</h1>
+
+  <!-- Trait Filter Section -->
+  <label for="traitFilter">Filter by Trait:</label>
+  <select id="traitFilter">
+    <option value="">-- Select Trait --</option>
+    <option value="loyal">🐾 Loyal</option>
+    <option value="energetic">⚡ Energetic</option>
+    <option value="smart">🧠 Smart</option>
+    <option value="cuddly">🛏️ Cuddly</option>
+    <option value="playful">🎾 Playful</option>
+  </select>
+  <button type="button" onclick="filterByTrait()">🔍 Find Matches</button>
+
+  <form id="dogForm" enctype="multipart/form-data">
+    <label for="name">Dog's Name:</label>
+    <input type="text" name="name" required>
+
+    <label for="breed">Breed:</label>
+    <input type="text" name="breed" list="breedList" required>
+    <datalist id="breedList">
+      <option value="Shiba Inu">
+      <option value="Golden Retriever">
+      <option value="Beagle">
+      <option value="Border Collie">
+      <option value="French Bulldog">
+      <option value="Poodle">
+      <option value="German Shepherd">
+      <option value="Corgi">
+      <option value="Dalmatian">
+      <option value="Husky">
+      <option value="Chihuahua">
+    </datalist>
+
+    <label>Traits:</label>
+    <div class="trait-selector">
+      <label><input type="checkbox" name="traits" value="loyal"> 🐾 Loyal</label>
+      <label><input type="checkbox" name="traits" value="energetic"> ⚡ Energetic</label>
+      <label><input type="checkbox" name="traits" value="smart"> 🧠 Smart</label>
+      <label><input type="checkbox" name="traits" value="cuddly"> 🛏️ Cuddly</label>
+      <label><input type="checkbox" name="traits" value="playful"> 🎾 Playful</label>
+    </div>
+
+    <label for="latitude">Latitude:</label>
+    <input type="number" name="latitude" step="any" required>
+
+    <label for="longitude">Longitude:</label>
+    <input type="number" name="longitude" step="any" required>
+
+    <label for="photo">Dog Photo:</label>
+    <input type="file" name="photo" accept="image/*">
+
+    <button type="button" onclick="surpriseDog()">🎲 Surprise Me</button>
+    <button type="submit">Generate Bio 🐾</button>
+  </form>
+
+  <div id="bioCard" class="bio-card"></div>
+  <div id="map"></div>
+
+  <script>
+    function surpriseDog() {
+      const breeds = ["Shiba Inu", "Golden Retriever", "Beagle", "Border Collie", "French Bulldog", "Poodle", "German Shepherd", "Corgi", "Dalmatian", "Husky", "Chihuahua"];
+      const traits = ["loyal", "energetic", "smart", "cuddly", "playful"];
+      const names = ["Mochi", "Luna", "Biscuit", "Ziggy", "Nala", "Oreo", "Milo", "Peanut", "Clover", "Maple"];
+
+      const form = document.getElementById('dogForm');
+
+      form.name.value = names[Math.floor(Math.random() * names.length)];
+      form.breed.value = breeds[Math.floor(Math.random() * breeds.length)];
+
+      form.querySelectorAll('input[name="traits"]').forEach(input => input.checked = false);
+      traits.sort(() => 0.5 - Math.random()).slice(0, 3).forEach(trait => {
+        const checkbox = form.querySelector(`input[name="traits"][value="${trait}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+
+      form.latitude.value = (48.85 + Math.random() * 0.02).toFixed(6);
+      form.longitude.value = (2.35 + Math.random() * 0.02).toFixed(6);
+    }
+
+    async function filterByTrait() {
+      const trait = document.getElementById("traitFilter").value;
+      if (!trait) return;
+
+      document.getElementById("bioCard").innerHTML = "🐾 Searching for dogs with that trait...";
+      document.getElementById("map").innerHTML = "";
+
+      try {
+        const response = await fetch(`http://127.0.0.1:8001/api/filter/?trait=${trait}`);
+        const result = await response.json();
+
+        if (response.ok) {
+          const list = result.map(dog => `<li>${dog.name} the ${dog.breed}</li>`).join('');
+          document.getElementById("bioCard").innerHTML = `<h3>Dogs with "${trait}" trait:</h3><ul>${list}</ul>`;
+        } else {
+          document.getElementById("bioCard").innerText = "🐾 No matches found.";
+        }
+      } catch (error) {
+        document.getElementById("bioCard").innerText = "🐾 Error fetching matches.";
+        console.error(error);
+      }
+    }
+
+    document.getElementById('dogForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+
+      const selectedTraits = Array.from(form.querySelectorAll('input[name="traits"]:checked'))
+        .map(input => input.value);
+
+      if (!form.name.value || !form.breed.value || selectedTraits.length === 0) {
+        alert("Please fill in all fields and select at least one trait.");
+        return;
+      }
+
+      document.getElementById("bioCard").innerHTML = "🐾 Generating bio...";
+      document.getElementById("map").innerHTML = "";
+
+      const formData = new FormData(form);
+      formData.append("traits", JSON.stringify(selectedTraits));
+
+
+
+      const breedImages = {
+        "Shiba Inu": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Shiba_Inu.jpg",
+        "Golden Retriever": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Golden_Retriever_Carlos.jpg",
+        "Beagle": "https://upload.wikimedia.org/wikipedia/commons/5/55/Beagle_600.jpg",
+        "Border Collie": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Border_Collie_600.jpg",
+        "French Bulldog": "https://upload.wikimedia.org/wikipedia/commons/3/32/French_Bulldog.jpg",
+        "Poodle": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Poodle_600.jpg",
+        "German Shepherd": "https://upload.wikimedia.org/wikipedia/commons/5/5f/German_Shepherd.jpg",
+        "Corgi": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Welsh_Corgi.jpg",
+        "Dalmatian": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Dalmatian_600.jpg",
+        "Husky": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Siberian_Husky.jpg",
+        "Chihuahua": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Chihuahua_600.jpg"
+      };
+
+      try {
+        const response = await fetch('http://127.0.0.1:8001/api/create/', {
+          method: 'POST',
+          body: formData,
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Server returned an error");
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("🐾 Success:", data);
+          // Check if bio exists before using it
+          if (data.bio) {
+            displayBio(data.bio);
+          } else {
+            displayBio("No bio available yet 🐾");
+          }
+          displayMap(data.nearby_matches);
+        })
+        .catch(error => {
+          console.error("🐾 Network error:", error);
+          showError("🐾 Network error. Is the backend running?");
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          let html = `<p>${result.bio}</p>`;
+          if (result.data.photo_url) {
+            html += `<img src="${result.data.photo_url}" alt="Uploaded dog photo" class="dog-avatar">`;
+          }
+          const breedImage = breedImages[form.breed.value];
+          if (breedImage) {
+            html += `<img src="${breedImage}" alt="${form.breed.value}" class="dog-avatar">`;
+          }
+
+          if (result.nearby_matches && result.nearby_matches.length > 0) {
+            const matches = result.nearby_matches.map(dog => `<li>${dog.name} the ${dog.breed}</li>`).join('');
+            html += `<h3>Nearby Matches:</h3><ul>${matches}</ul>`;
+
+            const map = L.map('map').setView([parseFloat(form.latitude.value), parseFloat(form.longitude.value)], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            L.marker([form.latitude.value, form.longitude.value]).addTo(map)
+              .bindPopup(`<b>${form.name.value}</b><br>Your dog`).openPopup();
+            
+            result.nearby_matches.forEach(dog => {
+              L.marker([dog.latitude, dog.longitude]).addTo(map)
+                .bindPopup(`<b>${dog.name}</b><br>${dog.breed}`);
+            });
+          }
+
+          document.getElementById("bioCard").innerHTML = html;
+        } else {
+          document.getElementById("bioCard").innerText = "🐾 Something went wrong. Please check your input.";
+          console.error("Server error:", result);
+        }
+      } catch (error) {
+        document.getElementById("bioCard").innerText = "🐾 Network error. Is the backend running?";
+        console.error("Fetch error:", error);
+      }
+    });
+  </script>
+</body>
+</html>
