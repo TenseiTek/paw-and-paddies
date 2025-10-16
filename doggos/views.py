@@ -29,37 +29,27 @@ def create_dog_profile(request):
         except json.JSONDecodeError:
             return Response({"traits": ["Value must be valid JSON."], "received": traits_raw}, status=400)
     else:
-        return Response({"traits": ["Traits must be a list or JSON string."]})  # ✅ FIXED
+        return Response({"traits": ["Traits must be a list or JSON string."]})
 
     name = data.get("name")
     breed = data.get("breed")
     traits = data.get("traits")
 
-    # ✅ GPT bio generation with fallback
     bio = generate_dog_bio(name, breed, traits)
     if not bio:
         bio = generate_fallback_bio(name, breed, traits)
 
     data["bio"] = bio
 
-    # ✅ Use patched data (not request.data)
     serializer = DogProfileSerializer(data=data)
     if serializer.is_valid():
         new_dog = serializer.save()
 
-        # ✅ Use the saved bio from serializer
         nearby_matches = find_nearby_dogs(
             lat=new_dog.latitude,
             lon=new_dog.longitude,
             exclude_id=new_dog.id
         )
-
-        print("Returning response:", {
-            "message": "Dog profile created!",
-            "data": serializer.data,
-            "bio": serializer.data.get("bio"),
-            "nearby_matches": nearby_matches
-        })
 
         return Response({
             "message": "Dog profile created!",
@@ -68,8 +58,8 @@ def create_dog_profile(request):
             "nearby_matches": nearby_matches
         })
     else:
-        print("Validation errors:", serializer.errors)
         return Response(serializer.errors, status=400)
+
 
 @api_view(['GET'])
 def test_bio(request):
