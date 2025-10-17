@@ -13,6 +13,6 @@ urlpatterns = [
     path('create/', create_dog_profile),  # 👈 This matches /api/create/
     path('test/', lambda request: JsonResponse({'message': 'Routing works ✅'})),
     path('bio-test/', views.test_bio),  # 👈 New route for GPT bio
-    path('api/filter/', views.filter_dogs_by_trait),
+    path('filter/', views.filter_dogs_by_trait),
+    path('ping/', lambda request: JsonResponse({'message': 'pong 🐾'})),
 ]
-
