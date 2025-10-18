@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-9(1ufl$9u&3o*u(c-wyy-gjn3@jilo(nw0g45n8*y5p)w8zpmi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['paw-and-paddies-backend.onrender.com']
 
 
 # Application definition
