@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-9(1ufl$9u&3o*u(c-wyy-gjn3@jilo(nw0g45n8*y5p)w8zpmi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['paw-and-paddies-backend.onrender.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'paw-and-paddies-backend.onrender.com']
 
 
 # Application definition
@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'paws_and_paddies.profiles.apps.ProfilesConfig',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
