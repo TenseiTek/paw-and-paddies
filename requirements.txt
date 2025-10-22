@@ -9,7 +9,6 @@ asttokens==3.0.0
 async-timeout==5.0.1
 attrs==25.3.0
 backcall==0.2.0
-backports.zoneinfo==0.2.1
 certifi==2025.10.5
 charset-normalizer==3.4.3
 comm==0.2.3
